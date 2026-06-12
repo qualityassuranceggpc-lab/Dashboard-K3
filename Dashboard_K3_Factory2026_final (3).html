@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard Performance Kecelakaan Kerja — Factory 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+:root{
+  --bg:#f5f4f1;--surface:#fff;--sf2:#f1efe8;--sf3:#e8e6df;
+  --bdr:rgba(0,0,0,0.10);--text:#18180f;--t2:#5a5956;--t3:#888680;
+  --blue:#2870c2;--blue-bg:#deeaf8;--blue-t:#0b3d7a;
+  --green:#4e8c12;--green-bg:#dff0cc;--green-t:#2d5a05;
+  --red:#d93535;--red-bg:#fce8e8;--red-t:#8c1a1a;
+  --amber:#b06d10;--amber-bg:#fdf0d8;--amber-t:#7a4300;
+  --r:10px;--rs:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+.page{max-width:1200px;margin:0 auto;padding:20px 20px 60px}
+
+/* ── HEADER ── */
+.top-label{font-size:11px;font-weight:700;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.main-title{font-size:22px;font-weight:800;letter-spacing:-.01em;margin-bottom:2px}
+.sub-period{font-size:12px;color:var(--t2);margin-bottom:10px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.badges{display:flex;gap:6px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px}
+.bg{background:var(--green-bg);color:var(--green-t)}
+.ba{background:var(--amber-bg);color:var(--amber-t)}
+.br{background:var(--red-bg);color:var(--red-t)}
+.bb{background:var(--blue-bg);color:var(--blue-t)}
+.hdr-btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font-size:12px;padding:7px 14px;border-radius:var(--rs);cursor:pointer;border:.5px solid var(--bdr);background:var(--surface);color:var(--t2);font-weight:500}
+.btn:hover{background:var(--sf2)}
+.btn-p{background:var(--blue-bg);color:var(--blue-t);border-color:transparent}
+.btn-p:hover{opacity:.85}
+
+/* ── GLOSSARY STRIP ── */
+.glossary{background:var(--blue-bg);border-radius:var(--rs);padding:9px 16px;margin-bottom:18px;font-size:11.5px;color:var(--blue-t);display:flex;flex-wrap:wrap;gap:6px 20px;line-height:1.6}
+.glossary strong{font-weight:700}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:18px}
+@media(max-width:960px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:520px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--sf2);border-radius:var(--r);padding:14px 14px 12px;position:relative}
+.kpi-lbl{font-size:10.5px;color:var(--t2);margin-bottom:5px;line-height:1.35}
+.kpi-main{display:flex;align-items:baseline;gap:6px}
+.kpi-val{font-size:26px;font-weight:800;line-height:1}
+.kpi-val2{font-size:14px;font-weight:600;color:var(--t2)}
+.kpi-sub{font-size:10px;color:var(--t3);margin-top:4px;line-height:1.4}
+.kpi.green .kpi-val{color:var(--green)}
+.kpi.blue .kpi-val{color:var(--blue)}
+.kpi.red .kpi-val{color:var(--red)}
+.kpi.amber .kpi-val{color:var(--amber)}
+.kpi-divider{width:1px;background:var(--bdr);margin:4px 0}
+
+/* ── CARDS ── */
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:720px){.r2,.r3{grid-template-columns:1fr}}
+.card{background:var(--surface);border:.5px solid var(--bdr);border-radius:var(--r);padding:18px}
+.card-full{margin-bottom:14px}
+.ct{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px}
+.ct-desc{font-size:10.5px;color:var(--t3);font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px}
+
+/* ── PROGRESS ── */
+.prog{margin:10px 0}
+.prog-lbl{display:flex;justify-content:space-between;font-size:11.5px;color:var(--t2);margin-bottom:5px}
+.prog-track{height:7px;background:var(--sf2);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;border-radius:4px}
+.bnum{font-size:32px;font-weight:800;line-height:1}
+.bsub{font-size:11.5px;color:var(--t2);margin-top:3px}
+.info-row{display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-top:8px}
+.info-note{font-size:10.5px;color:var(--t3);margin-top:5px}
+
+/* ── CHART & TABS ── */
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tab{font-size:11px;padding:4px 12px;border:.5px solid var(--bdr);border-radius:20px;cursor:pointer;background:transparent;color:var(--t2)}
+.tab.active{background:var(--blue-bg);color:var(--blue-t);border-color:transparent;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;font-size:11px;color:var(--t2)}
+.ld{display:flex;align-items:center;gap:5px}
+.lsq{width:10px;height:10px;border-radius:2px}
+.lln{width:18px;height:0;border-top:2.5px dashed var(--red)}
+
+/* ── MONTHLY TABLE ── */
+.mtbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.mtbl th{text-align:center;padding:7px 6px;font-weight:600;font-size:10.5px;color:var(--t2);background:var(--sf2);border-bottom:.5px solid var(--bdr)}
+.mtbl th:first-child{text-align:left;padding-left:10px}
+.mtbl td{text-align:center;padding:6px 6px;border-bottom:.5px solid var(--bdr);font-size:11.5px}
+.mtbl td:first-child{text-align:left;color:var(--t2);padding-left:10px}
+.ok{color:var(--green);font-weight:700}
+.warn{color:var(--amber);font-weight:700}
+.danger{color:var(--red);font-weight:700}
+
+/* ── SEP ── */
+.sep{display:flex;align-items:center;gap:12px;margin:26px 0 16px}
+.sep span{font-size:13px;font-weight:700;white-space:nowrap}
+.sep::before,.sep::after{content:'';flex:1;height:.5px;background:var(--bdr)}
+
+/* ── FILTER BAR ── */
+.fbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.fbar label{font-size:11px;color:var(--t2);font-weight:600}
+.ftab{font-size:11px;padding:5px 14px;border:.5px solid var(--bdr);border-radius:20px;cursor:pointer;background:transparent;color:var(--t2)}
+.ftab.active{background:var(--blue-bg);color:var(--blue-t);border-color:transparent;font-weight:700}
+.finfo{font-size:11px;color:var(--t3);margin-left:4px}
+
+/* ── ANA KPI ── */
+.ana-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:720px){.ana-kpi{grid-template-columns:repeat(2,1fr)}}
+.akpi{background:var(--sf2);border-radius:var(--rs);padding:14px 16px}
+.akpi-lbl{font-size:11px;color:var(--t2);margin-bottom:4px;line-height:1.4;font-weight:600}
+.akpi-lbl2{font-size:10px;color:var(--t3);font-weight:400}
+.akpi-val{font-size:26px;font-weight:800;line-height:1;margin:4px 0}
+.akpi-sub{font-size:10.5px;color:var(--t3)}
+
+/* ── HIGHLIGHT BOX ── */
+.week-highlight{background:linear-gradient(135deg,#fff8ed 0%,#fff3e0 100%);border:1.5px solid var(--amber);border-radius:var(--r);padding:18px 20px;margin-bottom:14px}
+.wh-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.wh-title{font-size:14px;font-weight:800;color:var(--amber-t)}
+.wh-sub{font-size:11.5px;color:var(--amber-t);margin-top:2px;opacity:.8}
+.wh-badge{font-size:12px;font-weight:700;padding:5px 14px;border-radius:20px;background:var(--amber-bg);color:var(--amber-t);border:1px solid var(--amber)}
+.wh-empty{text-align:center;padding:20px;color:var(--t3);font-size:12.5px}
+
+/* ── CASE TABLE ── */
+.ctbl-wrap{overflow-x:auto;border-radius:var(--rs);border:.5px solid var(--bdr)}
+.ctbl{width:100%;border-collapse:collapse;font-size:12px;min-width:960px}
+.ctbl thead tr{background:var(--sf2)}
+.ctbl th{text-align:left;padding:9px 10px;font-size:10.5px;font-weight:700;color:var(--t2);border-bottom:.5px solid var(--bdr);white-space:nowrap}
+.ctbl td{padding:8px 10px;border-bottom:.5px solid var(--bdr);color:var(--text);vertical-align:top;font-size:11.5px;line-height:1.45}
+.ctbl tbody tr:last-child td{border-bottom:none}
+.ctbl tbody tr:hover td{background:var(--sf2)}
+.pill{font-size:10px;padding:2px 8px;border-radius:20px;display:inline-block;white-space:nowrap;font-weight:700}
+.p-lti{background:var(--red-bg);color:var(--red-t)}
+.p-nlti{background:var(--green-bg);color:var(--green-t)}
+.empty-st{text-align:center;padding:28px;color:var(--t3);font-size:12px}
+
+/* ── LEGEND GLOSSARY IN CHART ── */
+.chart-note{font-size:10px;color:var(--t3);margin-top:6px;font-style:italic}
+
+footer{text-align:center;font-size:11px;color:var(--t3);margin-top:36px;padding-top:14px;border-top:.5px solid var(--bdr)}
+@media print{.hdr-btns,.btn{display:none}.page{padding:10px}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ══ HEADER ══ -->
+<div class="hdr">
+  <div>
+    <div class="main-title">🛡️ Dashboard Performance Kecelakaan Kerja — Factory 2026</div>
+    <div class="sub-period" id="hdr-period">Periode: Januari – Juni 2026 · Data kumulatif s/d minggu terakhir</div>
+    <div class="badges">
+      <span class="badge bg" id="badge-fr">FR LTI 2.79 — Di bawah target ✓</span>
+      <span class="badge bg" id="badge-sr">SR 3.49 — Di bawah target ✓</span>
+      <span class="badge bb">Zero Fatality ✓</span>
+      <span class="badge ba" id="badge-week">📅 Update: Minggu ke-22 (25 Mei–31 Mei 2026)</span>
+    </div>
+  </div>
+  <div class="hdr-btns">
+    <button class="btn btn-p" onclick="exportCSV()">⬇ Export CSV</button>
+    <button class="btn" onclick="window.print()">🖨 Cetak / PDF</button>
+  </div>
+</div>
+
+<!-- ══ GLOSSARY STRIP ══ -->
+<div class="glossary">
+  <span>📖 <strong>Panduan singkatan:</strong></span>
+  <span><strong>FR</strong> = Frequency Rate (Tingkat Kekerapan Kecelakaan) — jumlah kecelakaan per 1 juta jam kerja</span>
+  <span><strong>SR</strong> = Severity Rate (Tingkat Keparahan) — hari kerja hilang per 1 juta jam kerja</span>
+  <span><strong>LTI</strong> = Lost Time Injury — kecelakaan yang mengakibatkan <u>hari kerja hilang ≥ 0,5 hari</u></span>
+  <span><strong>Non-LTI</strong> = kecelakaan tanpa hari kerja hilang (First Aid / Medical Treatment)</span>
+  <span><strong>WR</strong> = Work Related — kecelakaan yang terjadi saat/karena aktivitas kerja</span>
+  <span><strong>HKO</strong> = Hari Kerja Operasi yang hilang akibat kecelakaan</span>
+</div>
+
+<!-- ══ KPI ══ -->
+<div class="kpi-grid">
+  <div class="kpi green">
+    <div class="kpi-lbl">📊 FR LTI — Frequency Rate<br><span style="font-size:10px;color:var(--t3)">(Tingkat Kekerapan LTI, Akumulatif)</span></div>
+    <div class="kpi-val" id="kpi-fr">2.79</div>
+    <div class="kpi-sub">Target: ≤ 6.20 &nbsp;✓ AMAN<br>per 1 juta jam kerja</div>
+  </div>
+  <div class="kpi green">
+    <div class="kpi-lbl">📉 SR — Severity Rate<br><span style="font-size:10px;color:var(--t3)">(Tingkat Keparahan, Akumulatif)</span></div>
+    <div class="kpi-val" id="kpi-sr">3.49</div>
+    <div class="kpi-sub">Target: ≤ 40.00 &nbsp;✓ AMAN<br>hari kerja hilang per 1 juta jam</div>
+  </div>
+  <div class="kpi amber">
+    <div class="kpi-lbl">⚠️ Kecelakaan LTI (Work Related)<br><span style="font-size:10px;color:var(--t3)">(yang menyebabkan hari kerja hilang)</span></div>
+    <div class="kpi-main">
+      <div class="kpi-val" id="kpi-lti">12</div>
+      <div style="font-size:11px;color:var(--t2);margin-left:8px;line-height:1.4">kasus LTI<br><span style="font-size:10px;color:var(--t3)" id="kpi-nolti-sub">+ 32 Non-LTI = 44 total WR</span></div>
+    </div>
+    <div class="kpi-sub">Basis perhitungan FR &amp; SR</div>
+  </div>
+  <div class="kpi red">
+    <div class="kpi-lbl">🕐 HKO Hilang — Hari Kerja Operasi<br><span style="font-size:10px;color:var(--t3)">(akibat kasus LTI)</span></div>
+    <div class="kpi-val" id="kpi-hko">15.0</div>
+    <div class="kpi-sub" id="kpi-hko-sub">hari kerja hilang akumulatif</div>
+  </div>
+  <div class="kpi blue">
+    <div class="kpi-lbl">👷 Jam Kerja Nyata<br><span style="font-size:10px;color:var(--t3)">(penyebut perhitungan FR & SR)</span></div>
+    <div class="kpi-val">4.29M</div>
+    <div class="kpi-sub">Akumulatif Jan–Mei 2026</div>
+  </div>
+  <div class="kpi blue">
+    <div class="kpi-lbl">Σ Sigma Kakal<br><span style="font-size:10px;color:var(--t3)">(akumulatif)</span></div>
+    <div class="kpi-val">5.72</div>
+    <div class="kpi-sub">Akumulatif Jan–Mei 2026</div>
+  </div>
+</div>
+
+<!-- ══ PROGRESS ══ -->
+<div class="r2">
+  <div class="card">
+    <div class="ct">Frequency Rate LTI vs Target<span class="ct-desc">— FR = (Jumlah LTI ÷ Jam Kerja) × 1.000.000</span></div>
+    <div class="bnum" style="color:var(--green)" id="prog-fr">2.79</div>
+    <div class="bsub">per 1 juta jam kerja orang</div>
+    <div class="prog" style="margin-top:14px">
+      <div class="prog-lbl"><span>Realisasi FR LTI</span><span>2.79 / 6.20 (45%)</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:45%;background:var(--blue)"></div></div>
+    </div>
+    <div class="info-row"><span>Sisa ruang: <strong style="color:var(--green)">3.41</strong> sebelum melebihi target</span></div>
+    <div class="info-note">FR LTI tertinggi: Maret 5.77 — 4 kasus LTI dengan 9 HKO hilang</div>
+  </div>
+  <div class="card">
+    <div class="ct">Severity Rate vs Target<span class="ct-desc">— SR = (Total HKO ÷ Jam Kerja) × 1.000.000</span></div>
+    <div class="bnum" style="color:var(--green)" id="prog-sr">3.49</div>
+    <div class="bsub">hari kerja hilang per 1 juta jam kerja orang</div>
+    <div class="prog" style="margin-top:14px">
+      <div class="prog-lbl"><span>Realisasi SR</span><span>3.49 / 40.00 (8.7%)</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:8.7%;background:var(--green)"></div></div>
+    </div>
+    <div class="info-row"><span>Sisa ruang: <strong style="color:var(--green)">36.51</strong> sebelum melebihi target</span></div>
+    <div class="info-note">SR terberat: Maret 12.98 — 9 hari kerja hilang dari 4 kasus LTI</div>
+  </div>
+</div>
+
+<!-- ══ TREND CHART ══ -->
+<div class="card card-full">
+  <div class="ct">Trend Bulanan FR (Frequency Rate) &amp; SR (Severity Rate) — Jan s/d Mei 2026</div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('fr_lti',this)">FR — LTI Saja<br><span style="font-size:9px;font-weight:400">Lost Time Injury (Hari Kerja Hilang ≥ 0,5)</span></button>
+    <button class="tab" onclick="switchTab('fr_total',this)">FR — Total (LTI + Non-LTI)<br><span style="font-size:9px;font-weight:400">Semua kecelakaan Work Related</span></button>
+    <button class="tab" onclick="switchTab('sr',this)">SR — Severity Rate<br><span style="font-size:9px;font-weight:400">Hari Kerja Hilang per 1 Juta Jam</span></button>
+  </div>
+  <div class="legend">
+    <div class="ld"><div class="lsq" style="background:var(--blue)"></div>Realisasi</div>
+    <div class="ld"><div class="lln"></div>Batas target</div>
+  </div>
+  <div style="position:relative;height:250px"><canvas id="trendChart"></canvas></div>
+  <div class="chart-note" id="trend-note">FR LTI = (Jumlah kasus LTI per bulan ÷ Jam Kerja Nyata bulan itu) × 1.000.000</div>
+</div>
+
+<!-- ══ ACC + HKO CHART ══ -->
+<div class="r2">
+  <div class="card">
+    <div class="ct">Distribusi kecelakaan per bulan<span class="ct-desc">— Work Related saja</span></div>
+    <div class="legend">
+      <div class="ld"><div class="lsq" style="background:var(--red)"></div>LTI (hari kerja hilang ≥ 0,5)</div>
+      <div class="ld"><div class="lsq" style="background:var(--green)"></div>Non-LTI (tanpa hari kerja hilang)</div>
+    </div>
+    <div style="position:relative;height:190px"><canvas id="accChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="ct">HKO hilang per bulan<span class="ct-desc">— dari kasus LTI</span></div>
+    <div class="legend"><div class="ld"><div class="lsq" style="background:var(--red)"></div>Hari Kerja Operasi (HKO) hilang</div></div>
+    <div style="position:relative;height:190px"><canvas id="hkoChart"></canvas></div>
+  </div>
+</div>
+
+<!-- ══ MONTHLY TABLE ══ -->
+<div class="card card-full">
+  <div class="ct">Rekap data bulanan — Work Related (basis LTI untuk FR &amp; SR)</div>
+  <div style="overflow-x:auto">
+    <table class="mtbl">
+      <thead>
+        <tr><th>Metrik</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>Mei</th><th>Akumulatif</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Kecelakaan LTI <span style="font-size:10px;color:var(--t3)">(HKO ≥ 0,5 hari)</span></td><td>1</td><td>1</td><td class="warn">4</td><td>0</td><td class="warn">6</td><td><strong>12</strong></td></tr>
+        <tr><td>Kecelakaan Non-LTI <span style="font-size:10px;color:var(--t3)">(HKO = 0)</span></td><td>4</td><td>5</td><td>5</td><td>9</td><td>9</td><td><strong>32</strong></td></tr>
+        <tr><td>Total WR <span style="font-size:10px;color:var(--t3)">(LTI + Non-LTI)</span></td><td>5</td><td>6</td><td class="warn">9</td><td>9</td><td class="danger">15</td><td><strong>44</strong></td></tr>
+        <tr><td>HKO Hilang <span style="font-size:10px;color:var(--t3)">(hari kerja operasi)</span></td><td>0.5</td><td>1.0</td><td class="danger">9.0</td><td>0</td><td class="warn">4.5</td><td><strong>15.0</strong></td></tr>
+        <tr><td>FR LTI <span style="font-size:10px;color:var(--t3)">(Frequency Rate, hanya LTI)</span></td><td class="ok">1.43</td><td class="ok">1.29</td><td class="warn">5.77</td><td class="ok">0</td><td class="ok">6.13</td><td class="ok"><strong>2.79</strong></td></tr>
+        <tr><td>FR Total <span style="font-size:10px;color:var(--t3)">(LTI + Non-LTI)</span></td><td>7.17</td><td>7.72</td><td class="danger">12.98</td><td>7.84</td><td class="danger">15.33</td><td>10.25</td></tr>
+        <tr><td>SR <span style="font-size:10px;color:var(--t3)">(Severity Rate)</span></td><td class="ok">0.72</td><td class="ok">1.29</td><td class="danger">12.98</td><td class="ok">0</td><td class="ok">4.60</td><td class="ok"><strong>3.49</strong></td></tr>
+        <tr><td>Target FR LTI</td><td style="color:var(--t3)">6.20</td><td style="color:var(--t3)">6.20</td><td style="color:var(--t3)">6.20</td><td style="color:var(--t3)">6.20</td><td style="color:var(--t3)">6.20</td><td style="color:var(--t3)">6.20</td></tr>
+        <tr><td>Target SR</td><td style="color:var(--t3)">40.00</td><td style="color:var(--t3)">40.00</td><td style="color:var(--t3)">40.00</td><td style="color:var(--t3)">40.00</td><td style="color:var(--t3)">40.00</td><td style="color:var(--t3)">40.00</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;font-size:10.5px">
+    <span style="background:var(--green-bg);color:var(--green-t);padding:2px 8px;border-radius:4px;font-weight:600">OK — Di bawah target</span>
+    <span style="background:var(--amber-bg);color:var(--amber-t);padding:2px 8px;border-radius:4px;font-weight:600">PERHATIAN — Peningkatan signifikan</span>
+    <span style="background:var(--red-bg);color:var(--red-t);padding:2px 8px;border-radius:4px;font-weight:600">MELEBIHI TARGET</span>
+  </div>
+</div>
+
+<!-- ══ ANALITIK ══ -->
+<div class="sep"><span>📊 Analitik Kecelakaan Kerja — Weekly / MTD / YTD</span></div>
+
+<div class="fbar">
+  <label>Periode:</label>
+  <button class="ftab active" onclick="setFilter('ytd',this)">YTD (Januari–sekarang)</button>
+  <button class="ftab" onclick="setFilter('mtd',this)">MTD (Bulan ini)</button>
+  <button class="ftab" onclick="setFilter('weekly',this)">Weekly (per minggu)</button>
+  <span class="finfo" id="f-info"></span>
+</div>
+
+<!-- ANA KPI -->
+<div class="ana-kpi">
+  <div class="akpi">
+    <div class="akpi-lbl">Total Kecelakaan Kerja (WR)<div class="akpi-lbl2">Work Related pada periode ini</div></div>
+    <div class="akpi-val" id="a-total" style="color:var(--amber)">—</div>
+    <div class="akpi-sub" id="a-lti-sub">LTI: — | Non-LTI: —</div>
+  </div>
+  <div class="akpi">
+    <div class="akpi-lbl">HKO Hilang — Hari Kerja Operasi<div class="akpi-lbl2">dari kasus LTI pada periode ini</div></div>
+    <div class="akpi-val" id="a-hko" style="color:var(--red)">—</div>
+    <div class="akpi-sub">hari kerja hilang</div>
+  </div>
+  <div class="akpi">
+    <div class="akpi-lbl">FR LTI — Frequency Rate<div class="akpi-lbl2">kasus LTI per 1 juta jam kerja</div></div>
+    <div class="akpi-val" id="a-fr" style="color:var(--blue)">—</div>
+    <div class="akpi-sub">per 1 juta jam kerja</div>
+  </div>
+  <div class="akpi">
+    <div class="akpi-lbl">SR — Severity Rate<div class="akpi-lbl2">hari kerja hilang per 1 juta jam</div></div>
+    <div class="akpi-val" id="a-sr" style="color:var(--blue)">—</div>
+    <div class="akpi-sub">hari hilang / juta jam</div>
+  </div>
+</div>
+
+<!-- ANA CHARTS: 3 kolom -->
+<div class="r3">
+  <div class="card">
+    <div class="ct">Per Sub-Departemen</div>
+    <div style="position:relative;height:210px"><canvas id="deptChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="ct">LTI vs Non-LTI<div class="ct-desc" style="display:block;margin-top:2px">LTI = Hari Kerja Hilang ≥ 0,5 · Non-LTI = Tanpa Hari Kerja Hilang</div></div>
+    <div style="position:relative;height:150px"><canvas id="ltiChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="ct">Jenis Kejadian Kecelakaan<div class="ct-desc" style="display:block;margin-top:2px">Terpeleset, Terjatuh, Tersayat, dll.</div></div>
+    <div style="position:relative;height:210px"><canvas id="jenisChart"></canvas></div>
+  </div>
+</div>
+
+<div class="card card-full" style="margin-bottom:14px">
+  <div class="ct">Per Lokasi Kejadian</div>
+  <div style="position:relative;height:160px"><canvas id="lokasiChart"></canvas></div>
+</div>
+
+<!-- ══ HIGHLIGHT MINGGU INI ══ -->
+<div class="sep"><span>🔔 Log Kasus Minggu Terkini</span></div>
+<div class="week-highlight" id="week-highlight-box">
+  <div class="wh-header">
+    <div>
+      <div class="wh-title" id="wh-title">🚨 Log Kasus — Minggu Terkini</div>
+      <div class="wh-sub" id="wh-sub">Menampilkan kasus pada minggu terakhir yang ada datanya</div>
+    </div>
+    <span class="wh-badge" id="wh-badge">— kasus</span>
+  </div>
+  <div class="ctbl-wrap">
+    <table class="ctbl">
+      <thead>
+        <tr>
+          <th>No</th><th>Tanggal</th><th>Nama</th><th>Sub-Departemen</th>
+          <th>Jenis Kejadian</th><th>Kronologi</th><th>Lokasi</th>
+          <th>Klasifikasi</th><th style="text-align:center">HKO</th>
+        </tr>
+      </thead>
+      <tbody id="wh-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ LOG LENGKAP ══ -->
+<div class="sep"><span>📋 Log Lengkap Kecelakaan Kerja (Work Related) — <span id="log-period-lbl">YTD 2026</span></span></div>
+<div class="card card-full">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <div class="ct" style="margin:0">Log Kasus — <span id="log-lbl2">YTD 2026</span></div>
+    <span style="font-size:11px;color:var(--t2)" id="log-count">Menampilkan — kasus</span>
+  </div>
+  <div class="ctbl-wrap">
+    <table class="ctbl">
+      <thead>
+        <tr>
+          <th style="width:34px">No</th>
+          <th style="width:90px">Tanggal</th>
+          <th style="width:56px">Minggu</th>
+          <th style="min-width:120px">Nama</th>
+          <th style="min-width:130px">Sub-Departemen</th>
+          <th style="min-width:100px">Jenis Kejadian</th>
+          <th style="min-width:220px">Kronologi</th>
+          <th style="min-width:120px">Lokasi</th>
+          <th style="width:90px;text-align:center">Klasifikasi</th>
+          <th style="width:60px;text-align:center">HKO</th>
+        </tr>
+      </thead>
+      <tbody id="case-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Dashboard Performance Kecelakaan Kerja · Factory 2026 · Data Work Related Jan–Juni 2026 + Google Sheets (Juni→) · Logika: HKO ≥ 0,5 = LTI · FR & SR dihitung otomatis</footer>
+</div>
+
+<script>
+// ══ PLUGIN REGISTER — harus paling atas sebelum Chart apapun dibuat ══
+Chart.register(ChartDataLabels);
+
+// ══ BASELINE DATA Jan–Mei 2026 (Work Related) ══
+const BASELINE = [
+  {tgl:"2026-01-19",nama:"Rahmad Tullah",subdep:"Processing Cannery",jenis:"Tersayat",kronologi:"Membersihkan crown tersangkut di pisau crown, tangan kiri jempol tersayat pisau",lokasi:"Area Ginaca 08",hko:0},
+  {tgl:"2026-01-20",nama:"Fedelis Beni Santoso",subdep:"Non Can",jenis:"Tergores",kronologi:"Memperbaiki mesin pengering dengan boor tangan, boor meleset kena jari jempol kiri",lokasi:"Laundry sarung tangan",hko:0},
+  {tgl:"2026-01-24",nama:"Ida Natalia",subdep:"Processing Cannery",jenis:"Terpeleset/Terjatuh",kronologi:"Membawa selang melewati area cooker, terpeleset ceceran soda api di lantai",lokasi:"Samping cooker depan ruang mekanik",hko:0},
+  {tgl:"2026-01-31",nama:"Farida",subdep:"Processing Cannery",jenis:"Paparan Kimia/Soda",kronologi:"Cuci mesin menyikat talang SKS, soda api tidak sengaja mengenai mata dan leher",lokasi:"Area SKS potong bonggol line 24",hko:0},
+  {tgl:"2026-01-31",nama:"Jumiati",subdep:"Processing Cannery",jenis:"Paparan Kimia/Soda",kronologi:"Cuci mesin menyemprot soda api ke MTC 013, percikan soda api mengenai mata kanan",lokasi:"Area MTC 013",hko:0.5},
+  {tgl:"2026-02-05",nama:"Ani Listyarin",subdep:"Quality Control",jenis:"Tertimpa Benda",kronologi:"Tray 12x20oz terjatuh dari mesin paletizer mengenai kepala korban saat inspeksi line 8",lokasi:"Line 8 labelling factory",hko:0},
+  {tgl:"2026-02-05",nama:"Rangga Bramantya",subdep:"Labelling",jenis:"Paparan Kimia/Soda",kronologi:"Aktivitas perbaikan mesin menggunakan alat las, mata terpapar asap las",lokasi:"Label",hko:0},
+  {tgl:"2026-02-07",nama:"Winarni",subdep:"Processing Cannery",jenis:"Terkilir",kronologi:"Mengambil nampan dengan kereta dorong, saat membelokkan kereta dorong pinggang terkilir",lokasi:"Area line 16",hko:0},
+  {tgl:"2026-02-13",nama:"Hadi Iswanto",subdep:"Processing Cannery",jenis:"Tertusuk",kronologi:"Mengukur mika menggunakan profil aluminium, jari telunjuk tangan kiri tertusuk profil",lokasi:"Workshop PPBP cannery",hko:0},
+  {tgl:"2026-02-13",nama:"Komsiyah",subdep:"Processing Cannery",jenis:"Terpeleset/Terjatuh",kronologi:"Turun dari dak terpeleset dan jatuh posisi duduk, kepala terbentur meja, siku tangan kanan kena tiang meja",lokasi:"Area CTB 04",hko:1},
+  {tgl:"2026-02-28",nama:"Meri Yusnita",subdep:"Processing Cannery",jenis:"Paparan Kimia/Soda",kronologi:"Cuci mesin menyikat lantai line VI menggunakan soda api, terpercik mengenai mata kanan",lokasi:"Area Line 06",hko:0},
+  {tgl:"2026-03-03",nama:"Zainal Abidin",subdep:"Labelling",jenis:"Terpeleset/Terjatuh",kronologi:"Berangkat kerja dengan sepeda motor, mengerem mendadak, ban motor tergelincir dan terjatuh",lokasi:"Area label",hko:0},
+  {tgl:"2026-03-06",nama:"Yulia Melda Sari",subdep:"Processing Cannery",jenis:"Terpeleset/Terjatuh",kronologi:"Diperbantukan di GN, saat naik tangga GN 17 terpeleset dan terjatuh, kepala terbentur lantai",lokasi:"Area RM GN 17",hko:3},
+  {tgl:"2026-03-06",nama:"Widori Ningsih",subdep:"Processing Cannery",jenis:"Terpeleset/Terjatuh",kronologi:"Mendorong gerobak tutup kaleng, terpeleset karena terlalu berat, lutut kiri berbunyi dan nyeri",lokasi:"Area Mesin SA 01",hko:2},
+  {tgl:"2026-03-09",nama:"Adi Purnawijaya",subdep:"Maintenance Cannery",jenis:"Terjepit",kronologi:"Memperbaiki mesin seamer, saat mengambil tutup kaleng terjepit mengenai jari manis tangan kiri",lokasi:"Area Seamer 5508",hko:0},
+  {tgl:"2026-03-09",nama:"Fajar Nur Hidayat",subdep:"Maintenance Cannery",jenis:"Tersayat/Tergores",kronologi:"Menyiapkan alat sambung conveyor, tangan tidak sengaja menyandar ke baling-baling berputar",lokasi:"Ruang Perubahan produksi Maintenance Cannery",hko:0},
+  {tgl:"2026-03-09",nama:"Palupi Yenita Maria",subdep:"Labelling",jenis:"Tertimpa Benda",kronologi:"Aktivitas proses loading barang, kaki kiri tertimpa/tertekan lidah forklift",lokasi:"Area label",hko:2},
+  {tgl:"2026-03-11",nama:"Ngatmi",subdep:"Processing Cannery",jenis:"Terjepit",kronologi:"Menutup mesin cutting, pegangan lepas dan menimpa tangan kiri, jari tengah patah dan jari manis luka",lokasi:"Mesin cutting Line 13",hko:2},
+  {tgl:"2026-03-24",nama:"Taufik Hidayat",subdep:"Maintenance Cannery",jenis:"Paparan Kimia/Soda",kronologi:"Aktivitas service mesin, duduk di area cuci mesin rekan kerja, terkena cairan soda pada paha belakang kiri",lokasi:"Line 11",hko:0},
+  {tgl:"2026-03-30",nama:"Sujianto",subdep:"Labelling",jenis:"Terjepit",kronologi:"Menggantikan operator mesin Palletizer Line 11, mengarahkan produk, jari telunjuk kanan terjepit di antara 2 produk karton",lokasi:"Paletizer Line 11 Label",hko:0},
+  {tgl:"2026-04-01",nama:"Suprihantoro",subdep:"Processing Cannery",jenis:"Terjepit",kronologi:"Mendorong gerobak tutup, saat belok menabrak tiang, gerobak mundur dan jari kelingking kanan terjepit tangki cooker seamer",lokasi:"Lokasi pengisian END (tutup)",hko:0},
+  {tgl:"2026-04-06",nama:"Hayuna",subdep:"Processing Cannery",jenis:"Tertimpa Benda",kronologi:"Menimbang CR A10, kaleng numpuk mengalir terus karena operator tidak mendengar instruksi stop, kaleng mengenai kaki",lokasi:"SAS 09",hko:0},
+  {tgl:"2026-04-07",nama:"Liswiyanti",subdep:"Processing Cannery",jenis:"Tersayat",kronologi:"Saat memotong bonggol, jari telunjuk tangan kiri tersayat pisau",lokasi:"Area Potong Bonggol",hko:0},
+  {tgl:"2026-04-21",nama:"Erma Erpiyana",subdep:"Processing Cannery",jenis:"Tergores",kronologi:"Mengisi nanas can A10, can hendak jatuh, reflek menahan can sehingga jari tengah tangan kiri tergores",lokasi:"Line 12",hko:0},
+  {tgl:"2026-04-23",nama:"Andre Rakasiwi",subdep:"QA Factory",jenis:"Terjepit",kronologi:"Membantu menutup pintu gudang karton, jari tangan berada di celah engsel saat pintu didorong, jari tengah kiri luka",lokasi:"Gudang Karton Labeling",hko:0},
+  {tgl:"2026-04-26",nama:"Arif Triono",subdep:"Processing Cannery",jenis:"Paparan Kimia/Soda",kronologi:"Beraktivitas mengecat di area raw material, percikan cairan hypo dari geliden yang tidak tertutup mengenai mata kanan",lokasi:"RM, GN",hko:0},
+  {tgl:"2026-04-27",nama:"Nuraini",subdep:"Processing Cannery",jenis:"Paparan Kimia/Soda",kronologi:"Piket menyiram body mesin dengan soda api yang diencerkan, tidak sengaja mata kiri kecipratan soda api",lokasi:"SAS 03",hko:0},
+  {tgl:"2026-04-27",nama:"Parida Yulia",subdep:"Processing Cannery",jenis:"Paparan Kimia/Soda",kronologi:"Menyeleksi material nanas, sarung tangan bocor, tangan kiri terkena air nanas mengakibatkan iritasi",lokasi:"CYR 01",hko:0},
+  {tgl:"2026-04-28",nama:"Intan Oktaviani",subdep:"Processing Cannery",jenis:"Tersayat",kronologi:"Cuci mesin awal, menyikat area cross, antara ibu jari dan telunjuk tersayat plat cross hingga robek",lokasi:"Area CTB dan Line 11",hko:0},
+  {tgl:"2026-05-04",nama:"Masnuning",subdep:"Processing Cannery",jenis:"Lain-lain",kronologi:"Akan menaiki tangga, lutut kaki kanan terasa nyeri dan bengkak, sulit digerakkan",lokasi:"Area potong bonggol line 15",hko:1},
+  {tgl:"2026-05-06",nama:"Camilia Safitri",subdep:"Processing Cannery",jenis:"Terjepit",kronologi:"Membersihkan mesin RZR line 7, tiba-tiba mesin push bar hidup dan terkena jari tangan kiri",lokasi:"Area mesin RZR di line 7",hko:0},
+  {tgl:"2026-05-07",nama:"Didik Santoso",subdep:"MC Cannery",jenis:"Paparan Kimia/Soda",kronologi:"Menggerinda tutup rantai, terkena percikan gram/serpihan pada mata kanan",lokasi:"Raw material",hko:0},
+  {tgl:"2026-05-11",nama:"Media Natalina",subdep:"Processing Cannery",jenis:"Terjepit",kronologi:"Mengoperasikan mesin, jari terjepit di antara dudukan pisau crown dan buah di elevator",lokasi:"Ginaca 03",hko:0},
+  {tgl:"2026-05-11",nama:"Merwanda",subdep:"PPIC support",jenis:"Paparan Kimia/Soda",kronologi:"Menggerinda mata pisau potong rumput, tidak sengaja mata kiri terkena percikan gram",lokasi:"Belakang Mill Juice",hko:0},
+  {tgl:"2026-05-12",nama:"Mariah",subdep:"Processing Cannery",jenis:"Terpeleset/Terjatuh",kronologi:"Berjalan di lokasi line 23, terpeleset karena sepatu licin kemudian terjatuh, bibir atas robek",lokasi:"Area line 23",hko:0.5},
+  {tgl:"2026-05-14",nama:"Lia Asmarani",subdep:"Processing Cannery",jenis:"Terjepit",kronologi:"Mengoper produk di jalur MTC line 5, produk roboh, saat membetulkan produk jari tangan terjepit jalur MTC",lokasi:"Area MTC line 05",hko:1},
+  {tgl:"2026-05-17",nama:"Wasilah",subdep:"Processing Cannery",jenis:"Paparan Kimia/Soda",kronologi:"Menyikat baskom yang diaplikasi soda api, tidak sengaja mata kiri terkena cipratan soda api",lokasi:"Bak pencucian nampan line 22",hko:0},
+  {tgl:"2026-05-17",nama:"Happy Mahoyani",subdep:"Processing Cannery",jenis:"Paparan Kimia/Soda",kronologi:"Mencuci nampan dengan soda api, sisa soda api di gayung menetes mengenai paha kanan — luka bakar",lokasi:"Area line 13",hko:0},
+  {tgl:"2026-05-17",nama:"Maria Andriyani",subdep:"Processing Cannery",jenis:"Terpeleset/Terjatuh",kronologi:"Mendorong produk dari CTB 06, lantai licin sehingga terpeleset dengan posisi terduduk, pinggang nyeri",lokasi:"Antara line 6 dan 7",hko:0},
+  {tgl:"2026-05-19",nama:"Susi Andika",subdep:"Processing Cannery",jenis:"Tertimpa Benda",kronologi:"Menyusun produk kaleng A10 di line 14, produk jatuh mengenai jari kelingking dan tergores",lokasi:"Line 14",hko:0.5},
+  {tgl:"2026-05-22",nama:"Musa",subdep:"MC Cannery",jenis:"Terkilir",kronologi:"Melakukan pengelasan dengan posisi berdiri, punggung kiri keseleo dan urat ketarik",lokasi:"Aseptik",hko:0},
+  {tgl:"2026-05-24",nama:"Danang Eka Prasetya",subdep:"Processing Cannery",jenis:"Terjepit",kronologi:"Memasukkan gerobak tutup ke SAS 08, tutup gerobak nabrak tiang, menghimpit jari tangan kanan — luka sobek",lokasi:"SAS 08",hko:0.5},
+  {tgl:"2026-05-28",nama:"Rumiatun",subdep:"Processing Cannery",jenis:"Terpeleset/Terjatuh",kronologi:"Menaiki podium line 22, kaki kiri terpeleset dan jatuh terguling ke lantai, pantat kiri nyeri",lokasi:"Podium Line 22",hko:0},
+  {tgl:"2026-05-29",nama:"Irma Nur Prihatini",subdep:"Processing Cannery",jenis:"Tersayat",kronologi:"Membuang biji jambu menggunakan pisau, jari kelingking tangan kiri tersayat pisau",lokasi:"Pengupasan TFS",hko:1},
+  // ── JUNI 2026 — W23 ──
+  {tgl:"2026-06-03",nama:"Agung Marute Gusman",subdep:"Raw Material",jenis:"Lain-lain",kronologi:"Saat menutup Bin, mata terkena serpihan besi tutup bin",lokasi:"Tempat buka tutup Bin (RM)",hko:0},
+  {tgl:"2026-06-03",nama:"Arya Dwi Permana",subdep:"Power Plant",jenis:"Paparan Kimia/Soda",kronologi:"Sedang bekerja gerinda poles, tidak sengaja mata kiri terkena percikan gerinda",lokasi:"Boiler",hko:0},
+  {tgl:"2026-06-03",nama:"Benny Alvandi",subdep:"Maintenance Cannery",jenis:"Paparan Kimia/Soda",kronologi:"Saat ngetak las besi rantai, bekas las/tai las mental masuk ke dalam mata kiri",lokasi:"Raw Material",hko:0},
+  {tgl:"2026-06-04",nama:"Heny Dwi Safira",subdep:"Processing Cannery",jenis:"Terpeleset/Terjatuh",kronologi:"Saat mengangkat nampan CR ke mesin RZR line 12, terpeleset dan kepala tertimpa nampan, sempat pingsan — kening benjol dan nyeri, lutut kaki kiri memar kebiruan",lokasi:"Area potong bonggol Line 12",hko:0},
+  // ── JUNI 2026 — W24 ──
+  {tgl:"2026-06-10",nama:"Dzakwan Arhab Heliyanja",subdep:"Can Making",jenis:"Terjepit",kronologi:"Saat hendak wrapping end di palet, wrapping turun sendiri dan tangan kiri terjepit — luka dan hematom pada tangan kiri",lokasi:"Can making end line",hko:0},
+  {tgl:"2026-06-10",nama:"Saihu",subdep:"Processing Cannery",jenis:"Terpeleset/Terjatuh",kronologi:"Saat naik ke screw aseptic hampir terjatuh terpeleset, kaki terbentur anak tangga — memar di kaki kanan",lokasi:"Tangga aseptic",hko:0},
+  {tgl:"2026-06-11",nama:"Mariono",subdep:"Factory Keeping",jenis:"Tertusuk",kronologi:"Saat service palet/dongkel palet, ada papan terpental ada pakunya. Saat meletakkan papan palet afkir ke box/ram, tidak sengaja menginjak paku yang menembus sepatu safety boot — luka tusuk telapak kaki kiri",lokasi:"Service Palet",hko:0},
+  {tgl:"2026-06-11",nama:"Eliya",subdep:"Processing Cannery",jenis:"Terjepit",kronologi:"Saat bantu SM 01 memperbaiki can yang roboh di Top can, ada TK SM yang menekan tombol liter can dan kaki terjepit",lokasi:"SM 01",hko:0},
+];
+
+const JAM_BULAN={1:696945,2:777315,3:693259,4:1148486,5:978680,6:950000};
+const JAM_YTD=5244685;
+const SHEET_URL = ""; // disabled - data sudah di baseline
+  // const SHEET_URL_BACKUP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vREpuPH04Vw27IPD5ir-HlqD7rFbY22KA0FlRGMaKvVC4SnizLtQs-RCiWYH1wzjQ/pub?gid=1649597236&single=true&output=csv"; // ← isi URL Google Sheets CSV setelah publish
+
+let allData=[...BASELINE];
+
+async function loadSheets(){
+  if(!SHEET_URL){renderAll();return;}
+
+  // Coba beberapa proxy untuk bypass CORS Google Sheets
+  const proxies=[
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(SHEET_URL)}`,
+    `https://corsproxy.io/?${encodeURIComponent(SHEET_URL)}`,
+    SHEET_URL // fallback langsung
+  ];
+
+  let loaded=false;
+  for(const url of proxies){
+    try{
+      const r=await fetch(url,{cache:'no-cache'});
+      if(!r.ok) continue;
+      const txt=await r.text();
+      if(!txt||txt.trim().length<10) continue;
+
+      // Parse CSV - handle quoted fields dengan benar
+      const rows=txt.trim().split('\n').slice(1);
+      const extra=[];
+      for(const row of rows){
+        if(!row.trim()) continue;
+        // Parse CSV dengan benar (handle koma dalam quotes)
+        const c=[];
+        let cur='',inQ=false;
+        for(let i=0;i<row.length;i++){
+          if(row[i]==='"'){inQ=!inQ;}
+          else if(row[i]===','&&!inQ){c.push(cur.trim());cur='';}
+          else{cur+=row[i];}
+        }
+        c.push(cur.trim());
+
+        // Kolom: A=Tanggal, B=Nama, C=SubDep, D=Div, E=Section, F=Status,
+        //        G=Kronologi, H=Akibat, I=Lokasi, J=TypeAccident, K=Klasifikasi,
+        //        L=HKO, M=RujukRS, N=Penjamin, O=JK, P=Umur, Q=Ket, R=JenisKejadian
+        const tgl=c[0]||'';
+        const nama=c[1]||'';
+        const subdep=c[2]||'';
+        const kronologi=c[6]||'';
+        const lokasi=c[8]||'';
+        const typeAcc=c[9]||'';
+        const hko=parseFloat(c[11])||0;
+        const jenis=c[17]||'Lain-lain'; // Kolom R = Jenis Kejadian
+
+        // Filter hanya Work Related
+        if(!tgl||!nama) continue;
+        if(typeAcc.toLowerCase().indexOf('non work')>-1) continue;
+
+        extra.push({tgl,nama,subdep,jenis:jenis||'Lain-lain',kronologi,lokasi,hko});
+      }
+
+      if(extra.length>0||rows.length>0){
+        allData=[...BASELINE,...extra];
+        console.log('✅ Sheets terhubung via '+url+' | '+extra.length+' baris baru');
+        loaded=true;
+        break;
+      }
+    }catch(e){
+      console.warn('Proxy gagal: '+url, e.message);
+    }
+  }
+
+  if(!loaded){
+    console.warn('⚠️ Semua proxy gagal, pakai baseline saja');
+  }
+  renderAll();
+}
+
+// ══ UTILS ══
+function weekNum(tgl){
+  const d=new Date(tgl),jan1=new Date(d.getFullYear(),0,1);
+  return Math.ceil(((d-jan1)/86400000+jan1.getDay()+1)/7);
+}
+function weekLabel(tgl){return 'W'+String(weekNum(tgl)).padStart(2,'0');}
+function getMonth(tgl){return new Date(tgl).getMonth()+1;}
+function isLTI(d){return (parseFloat(d.hko)||0)>=0.5;}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function latestWeek(){return Math.max(...allData.map(d=>weekNum(d.tgl)));}
+
+// ══ FILTER STATE ══
+let curFilter='ytd';
+const NOW_MONTH=6;
+function getFiltered(){
+  if(curFilter==='ytd') return allData;
+  if(curFilter==='mtd') return allData.filter(d=>getMonth(d.tgl)===NOW_MONTH);
+  if(curFilter==='weekly') return allData.filter(d=>weekNum(d.tgl)===latestWeek());
+  return allData;
+}
+function getJam(){
+  if(curFilter==='ytd') return JAM_YTD;
+  if(curFilter==='mtd') return JAM_BULAN[NOW_MONTH]||978680;
+  return Math.round((JAM_BULAN[NOW_MONTH]||978680)/4);
+}
+function setFilter(f,btn){
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  curFilter=f;
+  updateAnalytics();
+}
+
+// ══ COLORS / THEME ══
+const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+const gc=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.07)';
+const tc='#888680';
+const PALETTE=['#2870c2','#d93535','#4e8c12','#b06d10','#8040c0','#0a8a9a','#c04080','#888680','#e07010','#207060'];
+
+// ══ CHART INSTANCES ══
+let trendInst,accInst,hkoInst,deptInst,ltiInst,jenisInst,lokasiInst;
+
+// Monthly static data
+const months=['Jan','Feb','Mar','Apr','Mei'];
+const frLTI=[1.43,1.29,5.77,0,6.13];
+const frTotal=[7.17,7.72,12.98,7.84,15.33];
+const srData=[0.72,1.29,12.98,0,4.60];
+const ltiMon=[1,1,4,0,6];
+const nonMon=[4,5,5,9,9];
+const hkoMon=[0.5,1,9,0,4.5];
+
+const trendNotes={
+  fr_lti:'FR LTI = (Jumlah kasus LTI per bulan ÷ Jam Kerja Nyata bulan itu) × 1.000.000 | LTI = Lost Time Injury (Hari Kerja Hilang ≥ 0,5 hari)',
+  fr_total:'FR Total = (Semua kasus WR per bulan ÷ Jam Kerja Nyata bulan itu) × 1.000.000 | Mencakup LTI + Non-LTI',
+  sr:'SR = (Total Hari Kerja Hilang per bulan ÷ Jam Kerja Nyata bulan itu) × 1.000.000 | Ukuran keparahan kecelakaan'
+};
+
+// ══ TREND CHART ══
+function switchTab(type,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  if(trendInst) trendInst.destroy();
+  const ctx=document.getElementById('trendChart').getContext('2d');
+  let vals,target,color,yMax,lbl;
+  if(type==='fr_lti'){
+    vals=frLTI; target=months.map(()=>6.20); color='#2870c2'; yMax=20; lbl='FR LTI';
+  } else if(type==='fr_total'){
+    vals=frTotal; target=months.map(()=>6.20); color='#8040c0'; yMax=20; lbl='FR Total';
+  } else {
+    vals=srData; target=months.map(()=>40); color='#4e8c12'; yMax=50; lbl='SR';
+  }
+  document.getElementById('trend-note').textContent=trendNotes[type];
+
+  trendInst=new Chart(ctx,{
+    type:'line',
+    data:{labels:months,datasets:[
+      {label:lbl,data:vals,borderColor:color,backgroundColor:color+'25',fill:true,
+       tension:.35,pointRadius:6,pointBackgroundColor:color,borderWidth:2.5,
+       datalabels:{display:true,align:'top',anchor:'top',color:color,
+                   font:{size:12,weight:'bold'},formatter:v=>v===0?'0':v.toFixed(2)}},
+      {label:'Target',data:target,borderColor:'#d93535',borderDash:[7,4],
+       borderWidth:1.5,pointRadius:0,fill:false,datalabels:{display:false}}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:tc,font:{size:11},autoSkip:false}},
+        y:{grid:{color:gc},ticks:{color:tc,font:{size:11}},min:0,max:yMax}
+      },
+      layout:{padding:{top:28}}
+    }
+  });
+}
+
+// ══ ANALYTICS UPDATE ══
+function updateAnalytics(){
+  const data=getFiltered();
+  const ltiArr=data.filter(isLTI);
+  const nonArr=data.filter(d=>!isLTI(d));
+  const totalHKO=data.reduce((s,d)=>s+(parseFloat(d.hko)||0),0);
+  const jam=getJam();
+  const fr=ltiArr.length>0?((ltiArr.length/jam)*1e6).toFixed(2):'0.00';
+  const sr=((totalHKO/jam)*1e6).toFixed(2);
+
+  const periodLbl=curFilter==='ytd'?'YTD 2026':curFilter==='mtd'?'MTD Mei 2026':'Minggu W'+String(latestWeek()).padStart(2,'0');
+  document.getElementById('f-info').textContent='→ '+data.length+' kasus ditampilkan';
+  document.getElementById('log-period-lbl').textContent=periodLbl;
+  document.getElementById('log-lbl2').textContent=periodLbl;
+  document.getElementById('log-count').textContent='Menampilkan '+data.length+' kasus';
+
+  document.getElementById('a-total').textContent=data.length;
+  document.getElementById('a-lti-sub').textContent='LTI: '+ltiArr.length+' | Non-LTI: '+nonArr.length;
+  document.getElementById('a-hko').textContent=totalHKO.toFixed(1);
+  document.getElementById('a-fr').textContent=fr;
+  document.getElementById('a-sr').textContent=sr;
+
+  buildDeptChart(data);
+  buildLTIChart(data);
+  buildJenisChart(data);
+  buildLokasiChart(data);
+  buildWeekHighlight();
+  buildCaseTable(data);
+}
+
+function buildDeptChart(data){
+  const counts={};
+  data.forEach(d=>{counts[d.subdep]=(counts[d.subdep]||0)+1;});
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(deptInst) deptInst.destroy();
+  deptInst=new Chart(document.getElementById('deptChart'),{
+    type:'bar',
+    data:{labels:sorted.map(e=>e[0]),datasets:[{
+      data:sorted.map(e=>e[1]),
+      backgroundColor:PALETTE.slice(0,sorted.length),
+      borderRadius:4
+    }]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},datalabels:{
+        display:true,anchor:'end',align:'right',
+        color:'#333',font:{size:11,weight:'bold'},
+        formatter:v=>v
+      }},
+      layout:{padding:{right:24}},
+      scales:{
+        x:{grid:{color:gc},ticks:{color:tc,font:{size:10},stepSize:1},min:0},
+        y:{grid:{display:false},ticks:{color:tc,font:{size:10}}}
+      }
+    }
+  });
+}
+
+function buildLTIChart(data){
+  const ltiC=data.filter(isLTI).length;
+  const nonC=data.filter(d=>!isLTI(d)).length;
+  if(ltiInst) ltiInst.destroy();
+  ltiInst=new Chart(document.getElementById('ltiChart'),{
+    type:'doughnut',
+    data:{
+      labels:['LTI — Hari Kerja Hilang','Non-LTI — Tanpa Hari Kerja Hilang'],
+      datasets:[{data:[ltiC,nonC],backgroundColor:['#d93535cc','#4e8c12cc'],
+                 borderWidth:0,hoverOffset:5}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+      plugins:{
+        legend:{display:true,position:'bottom',labels:{font:{size:10},color:tc,boxWidth:10,padding:6}},
+        datalabels:{display:true,color:'#fff',font:{size:13,weight:'bold'},
+                    formatter:(v,ctx)=>{
+                      const total=ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
+                      return total>0?v+' ('+Math.round(v/total*100)+'%)':'';
+                    }}
+      }
+    }
+  });
+}
+
+function buildJenisChart(data){
+  const counts={};
+  data.forEach(d=>{const j=d.jenis||'Lain-lain';counts[j]=(counts[j]||0)+1;});
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  if(jenisInst) jenisInst.destroy();
+  jenisInst=new Chart(document.getElementById('jenisChart'),{
+    type:'bar',
+    data:{labels:sorted.map(e=>e[0]),datasets:[{
+      data:sorted.map(e=>e[1]),
+      backgroundColor:PALETTE.slice(0,sorted.length),
+      borderRadius:4
+    }]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},datalabels:{
+        display:true,anchor:'end',align:'right',
+        color:'#333',font:{size:11,weight:'bold'},
+        formatter:v=>v
+      }},
+      layout:{padding:{right:24}},
+      scales:{
+        x:{grid:{color:gc},ticks:{color:tc,font:{size:10},stepSize:1},min:0},
+        y:{grid:{display:false},ticks:{color:tc,font:{size:10}}}
+      }
+    }
+  });
+}
+
+function buildLokasiChart(data){
+  const counts={};
+  data.forEach(d=>{
+    let l=d.lokasi||'Tidak diketahui';
+    if(l.length>30) l=l.substring(0,29)+'…';
+    counts[l]=(counts[l]||0)+1;
+  });
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(lokasiInst) lokasiInst.destroy();
+  lokasiInst=new Chart(document.getElementById('lokasiChart'),{
+    type:'bar',
+    data:{labels:sorted.map(e=>e[0]),datasets:[{
+      data:sorted.map(e=>e[1]),
+      backgroundColor:'#b06d10cc',
+      borderRadius:4
+    }]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},datalabels:{
+        display:true,anchor:'end',align:'right',
+        color:'#333',font:{size:11,weight:'bold'},
+        formatter:v=>v
+      }},
+      layout:{padding:{right:24}},
+      scales:{
+        x:{grid:{color:gc},ticks:{color:tc,font:{size:10},stepSize:1},min:0},
+        y:{grid:{display:false},ticks:{color:tc,font:{size:10}}}
+      }
+    }
+  });
+}
+
+// ══ WEEK HIGHLIGHT ══
+function buildWeekHighlight(){
+  const lw=latestWeek();
+  const wdata=[...allData].filter(d=>weekNum(d.tgl)===lw)
+    .sort((a,b)=>new Date(b.tgl)-new Date(a.tgl));
+  const fmtOpts={day:'2-digit',month:'short',year:'2-digit'};
+  const dates=wdata.map(d=>new Date(d.tgl)).sort((a,b)=>a-b);
+  const wRangeLabel=dates.length?
+    dates[0].toLocaleDateString('id-ID',fmtOpts)+' – '+dates[dates.length-1].toLocaleDateString('id-ID',fmtOpts)
+    :'';
+  const wLabel='Minggu ke-'+String(lw).padStart(2,'0')+' ('+wRangeLabel+')';
+
+  document.getElementById('wh-title').textContent='🔔 Highlight Kasus — '+wLabel;
+  document.getElementById('wh-sub').textContent='Kasus Work Related yang tercatat pada minggu terakhir yang ada datanya (otomatis terdeteksi)';
+  document.getElementById('badge-week').textContent='📅 Update: '+wLabel;
+  document.getElementById('wh-badge').textContent=wdata.length+(wdata.length===1?' kasus':' kasus');
+
+  const tbody=document.getElementById('wh-tbody');
+  if(wdata.length===0){
+    tbody.innerHTML='<tr><td colspan="9"><div class="wh-empty">Tidak ada kasus pada minggu ini.</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML=wdata.map((d,i)=>{
+    const hko=parseFloat(d.hko)||0;
+    const pill=hko>=0.5?'<span class="pill p-lti">LTI</span>':'<span class="pill p-nlti">Non-LTI</span>';
+    const tgl=new Date(d.tgl).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'2-digit'});
+    return `<tr>
+      <td style="color:var(--t3);font-size:10px">${i+1}</td>
+      <td style="white-space:nowrap">${tgl}</td>
+      <td><strong>${esc(d.nama)}</strong></td>
+      <td>${esc(d.subdep)}</td>
+      <td><span style="font-size:11px">${esc(d.jenis||'—')}</span></td>
+      <td style="font-size:11px;color:var(--t2)">${esc(d.kronologi)}</td>
+      <td style="font-size:11px">${esc(d.lokasi)}</td>
+      <td>${pill}</td>
+      <td style="text-align:center">${hko>0?'<strong style="color:var(--red)">'+hko+'</strong>':'<span style="color:var(--t3)">0</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══ CASE TABLE ══
+function buildCaseTable(data){
+  const sorted=[...data].sort((a,b)=>new Date(b.tgl)-new Date(a.tgl));
+  const tbody=document.getElementById('case-tbody');
+  if(sorted.length===0){
+    tbody.innerHTML='<tr><td colspan="10"><div class="empty-st">Tidak ada kasus untuk periode ini.</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML=sorted.map((d,i)=>{
+    const hko=parseFloat(d.hko)||0;
+    const pill=hko>=0.5?'<span class="pill p-lti">LTI</span>':'<span class="pill p-nlti">Non-LTI</span>';
+    const tgl=new Date(d.tgl).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'2-digit'});
+    return `<tr>
+      <td style="color:var(--t3);font-size:10px">${i+1}</td>
+      <td style="white-space:nowrap;font-size:11px">${tgl}</td>
+      <td style="font-size:11px;color:var(--t2)">${weekLabel(d.tgl)}</td>
+      <td><strong style="font-weight:600">${esc(d.nama)}</strong></td>
+      <td style="font-size:11px">${esc(d.subdep)}</td>
+      <td style="font-size:11px"><span style="background:var(--sf2);padding:1px 6px;border-radius:4px">${esc(d.jenis||'—')}</span></td>
+      <td style="font-size:11px;color:var(--t2)">${esc(d.kronologi)}</td>
+      <td style="font-size:11px">${esc(d.lokasi)}</td>
+      <td style="text-align:center">${pill}</td>
+      <td style="text-align:center">${hko>0?'<strong style="color:var(--red)">'+hko+'</strong>':'<span style="color:var(--t3)">0</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══ EXPORT CSV ══
+function exportCSV(){
+  const data=getFiltered();
+  const hdr='No,Tanggal,Minggu,Nama,Sub-Departemen,Jenis Kejadian,Kronologi,Lokasi,Klasifikasi,HKO Hilang';
+  const rows=data.map((d,i)=>[i+1,d.tgl,weekLabel(d.tgl),
+    '"'+d.nama+'"','"'+d.subdep+'"','"'+(d.jenis||'-')+'"',
+    '"'+d.kronologi.replace(/"/g,'""')+'"','"'+(d.lokasi||'-')+'"',
+    isLTI(d)?'LTI':'Non-LTI',d.hko||0].join(','));
+  const csv=[hdr,...rows].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='HSE_Kasus_'+curFilter.toUpperCase()+'.csv';
+  a.click();
+}
+
+// ══ RENDER ALL — update KPI atas dari data allData ══
+function renderAll(){
+  // Hitung YTD dari seluruh data (baseline + sheets)
+  const ytdData = allData;
+  const ytdLTI  = ytdData.filter(isLTI);
+  const ytdNon  = ytdData.filter(d=>!isLTI(d));
+  const ytdHKO  = ytdData.reduce((s,d)=>s+(parseFloat(d.hko)||0),0);
+  const ytdFR   = ytdLTI.length>0 ? ((ytdLTI.length/JAM_YTD)*1e6).toFixed(2) : '0.00';
+  const ytdSR   = ((ytdHKO/JAM_YTD)*1e6).toFixed(2);
+
+  // Update KPI cards bagian atas
+  document.getElementById('kpi-fr').textContent  = ytdFR;
+  document.getElementById('kpi-sr').textContent  = ytdSR;
+  document.getElementById('kpi-lti').textContent = ytdLTI.length;
+  document.getElementById('kpi-hko').textContent = ytdHKO.toFixed(1);
+  document.getElementById('kpi-nolti-sub').textContent = '+ '+ytdNon.length+' Non-LTI = '+ytdData.length+' total WR';
+  document.getElementById('kpi-hko-sub').textContent   = 'hari kerja hilang akumulatif';
+
+  // Update progress bar FR
+  const frPct = Math.min((ytdFR/6.20)*100,100).toFixed(1);
+  const srPct = Math.min((ytdSR/40.00)*100,100).toFixed(1);
+  document.getElementById('prog-fr').textContent = ytdFR;
+  document.getElementById('prog-sr').textContent = ytdSR;
+
+  // Update badges header
+  const frOk = parseFloat(ytdFR) <= 6.20;
+  const srOk = parseFloat(ytdSR) <= 40.00;
+  document.getElementById('badge-fr').textContent = 'FR LTI '+ytdFR+' — '+(frOk?'Di bawah target ✓':'MELEBIHI TARGET ⚠️');
+  document.getElementById('badge-fr').className   = 'badge '+(frOk?'bg':'br');
+  document.getElementById('badge-sr').textContent = 'SR '+ytdSR+' — '+(srOk?'Di bawah target ✓':'MELEBIHI TARGET ⚠️');
+  document.getElementById('badge-sr').className   = 'badge '+(srOk?'bg':'br');
+
+  // Lanjut update analitik bawah
+  updateAnalytics();
+}
+
+// ══ INIT — semua chart dibuat setelah DOM siap ══
+document.addEventListener('DOMContentLoaded', function(){
+
+  // Monthly static charts (tidak pakai datalabels)
+  accInst=new Chart(document.getElementById('accChart'),{
+    type:'bar',
+    data:{labels:months,datasets:[
+      {label:'LTI (Hari Kerja Hilang)',data:ltiMon,backgroundColor:'#d93535cc',borderRadius:3},
+      {label:'Non-LTI (Tanpa Hari Kerja Hilang)',data:nonMon,backgroundColor:'#4e8c12cc',borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'top',labels:{font:{size:10},color:tc,boxWidth:10,padding:8}},
+               datalabels:{display:false}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{color:tc,font:{size:11},autoSkip:false}},
+              y:{stacked:true,grid:{color:gc},ticks:{color:tc,font:{size:11},stepSize:1}}}}
+  });
+
+  hkoInst=new Chart(document.getElementById('hkoChart'),{
+    type:'bar',
+    data:{labels:months,datasets:[{label:'HKO Hilang (hari)',data:hkoMon,
+      backgroundColor:'#d9353588',borderColor:'#d93535',borderWidth:1.5,borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},datalabels:{display:false},
+               tooltip:{callbacks:{label:c=>c.parsed.y+' hari kerja hilang'}}},
+      scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:11},autoSkip:false}},
+              y:{grid:{color:gc},ticks:{color:tc,font:{size:11}}}}}
+  });
+
+  // Init trend chart
+  switchTab('fr_lti',document.querySelector('.tab.active'));
+
+  // Load sheets & render analytics
+  loadSheets();
+});
+</script>
+</body>
+</html>
